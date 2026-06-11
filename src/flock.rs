@@ -2,6 +2,7 @@
 //! separation, alignment, and cohesion.
 
 use macroquad::prelude::*;
+use rayon::prelude::*;
 
 use crate::boid::Boid;
 use crate::grid::Grid;
@@ -64,8 +65,13 @@ impl Flock {
     /// Steering is computed for all boids before any of them move, so each
     /// boid reacts to where its neighbors *were* this frame, not mid-update.
     pub fn update(&mut self, dt: f32, bounds: Vec2) {
+        // Rebuild the spatial grid from this frame's positions, then steer
+        // every boid against it in parallel.
+        let grid = Grid::build(&self.boids, bounds, self.settings.neighbor_radius);
+
         let accelerations: Vec<Vec2> = (0..self.boids.len())
-            .map(|i| self.steer(i))
+            .into_par_iter()
+            .map(|i| self.steer(i, &grid))
             .collect();
 
         for (boid, acc) in self.boids.iter_mut().zip(accelerations) {
