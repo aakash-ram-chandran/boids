@@ -4,6 +4,7 @@
 use macroquad::prelude::*;
 
 use crate::boid::Boid;
+use crate::grid::Grid;
 
 /// Tunable weights and ranges that shape how the flock behaves.
 pub struct Settings {
@@ -39,18 +40,23 @@ pub struct Flock {
 impl Flock {
     /// Spawns `count` boids at random positions and headings inside `bounds`.
     pub fn new(count: usize, bounds: Vec2) -> Self {
-        let boids = (0..count)
-            .map(|_| {
-                let pos = vec2(rand::gen_range(0.0, bounds.x), rand::gen_range(0.0, bounds.y));
-                let angle = rand::gen_range(0.0, std::f32::consts::TAU);
-                Boid::new(pos, Vec2::from_angle(angle) * 120.0)
-            })
-            .collect();
+        let boids = (0..count).map(|_| spawn(bounds)).collect();
 
         Self {
             boids,
             settings: Settings::default(),
         }
+    }
+
+    /// Adds `count` new boids at random positions and headings inside `bounds`.
+    pub fn add(&mut self, count: usize, bounds: Vec2) {
+        self.boids.extend((0..count).map(|_| spawn(bounds)));
+    }
+
+    /// Removes up to `count` boids from the flock (never below zero).
+    pub fn remove(&mut self, count: usize) {
+        let keep = self.boids.len().saturating_sub(count);
+        self.boids.truncate(keep);
     }
 
     /// Advances every boid by `dt` seconds: steer, cap speed, move, wrap.
@@ -111,6 +117,13 @@ impl Flock {
 
         separate * s.separation + align * s.alignment + cohere * s.cohesion
     }
+}
+
+/// Makes one boid at a random position and heading inside `bounds`.
+fn spawn(bounds: Vec2) -> Boid {
+    let pos = vec2(rand::gen_range(0.0, bounds.x), rand::gen_range(0.0, bounds.y));
+    let angle = rand::gen_range(0.0, std::f32::consts::TAU);
+    Boid::new(pos, Vec2::from_angle(angle) * 120.0)
 }
 
 /// Turns a desired direction into a turn force, capped by `max_force`.
