@@ -1,7 +1,6 @@
 # Boids
 
 A 2D flocking simulation built in Rust with [macroquad](https://macroquad.rs/).
-A thousand boids swim around the screen.
 
 ![Boids flocking simulation](boids.gif)
 
@@ -24,14 +23,28 @@ leave one edge of the screen wrap around to the opposite side.
 cargo run --release
 ```
 
-A window opens with 1000 boids. 
+A window opens with the flock. Hold **Up** to spawn more boids and **Down** to
+remove them, and watch the FPS readout react live.
+
+## Performance
+
+The sim handles huge flocks thanks to two optimizations:
+
+- **Spatial grid** - boids only interact within `neighbor_radius`, so each frame
+  the flock is bucketed into a grid of cells and each boid only checks the 3x3
+  block of cells around it instead of every other boid. This turns the neighbor
+  search from O(n²) to roughly O(n) - the change that actually unlocks big flocks.
+- **Parallelism** - steering for all boids is computed across CPU cores with
+  [rayon](https://crates.io/crates/rayon) (one `into_par_iter()`), since each
+  boid's steering only reads the flock and can run independently.
 
 ## Project layout
 
 | File           | Responsibility                                              |
 | -------------- | ----------------------------------------------------------- |
-| `src/main.rs`  | Window setup and the draw/update game loop                  |
+| `src/main.rs`  | Window setup, keyboard controls, and the draw/update loop   |
 | `src/flock.rs` | The flock, the three steering rules, and tunable `Settings` |
+| `src/grid.rs`  | The spatial grid used for fast neighbor lookups             |
 | `src/boid.rs`  | A single boid's position, velocity, and how it's drawn      |
 
 ## Tuning
