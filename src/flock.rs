@@ -85,7 +85,7 @@ impl Flock {
     ///
     /// Blends separation (avoid crowding), alignment (match heading), and
     /// cohesion (move toward the group). Returns zero if it has no neighbors.
-    fn steer(&self, index: usize) -> Vec2 {
+    fn steer(&self, index: usize, grid: &Grid) -> Vec2 {
         let s = &self.settings;
         let me = &self.boids[index];
 
@@ -94,15 +94,18 @@ impl Flock {
         let mut center = Vec2::ZERO;
         let mut neighbors = 0;
 
-        for (j, other) in self.boids.iter().enumerate() {
+        // Only the boids in the 3x3 block of cells around me can be in range,
+        // so we ask the grid for those instead of scanning the whole flock.
+        grid.for_each_neighbor(me.pos, |j| {
             if j == index {
-                continue;
+                return;
             }
 
+            let other = &self.boids[j];
             let offset = me.pos - other.pos;
             let dist = offset.length();
             if dist > s.neighbor_radius || dist == 0.0 {
-                continue;
+                return;
             }
 
             if dist < s.separation_radius {
@@ -111,7 +114,7 @@ impl Flock {
             heading += other.vel;
             center += other.pos;
             neighbors += 1;
-        }
+        });
 
         if neighbors == 0 {
             return Vec2::ZERO;
