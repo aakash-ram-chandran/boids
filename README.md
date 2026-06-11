@@ -1,7 +1,7 @@
 # Boids
 
 A 2D flocking simulation built in Rust with [macroquad](https://macroquad.rs/).
-A thousand boids swim around the screen,.
+A thousand boids swim around the screen.
 
 ![Boids flocking simulation](boids.gif)
 
@@ -46,7 +46,7 @@ The flock's behavior lives in `Settings` (`src/flock.rs`). The defaults:
 | `alignment`         | `1.0`   | Weight of matching neighbors' heading        |
 | `cohesion`          | `0.9`   | Weight of pulling toward the group center    |
 | `max_speed`         | `220.0` | Speed cap (pixels/second)                    |
-| `max_force`         | `240.0` | Turn-rate cap — how sharply a boid can steer |
+| `max_force`         | `240.0` | Turn-rate cap how sharply a boid can steer |
 
 Crank `cohesion` for tighter swarms, raise `separation` for looser drifts, or
 shrink `neighbor_radius` for jittery, fragmented chaos.
