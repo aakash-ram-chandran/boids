@@ -1,5 +1,6 @@
 mod boid;
 mod flock;
+mod grid;
 
 use flock::Flock;
 use macroquad::prelude::*;
@@ -18,10 +19,22 @@ fn window() -> Conf {
 #[macroquad::main(window)]
 async fn main() {
     let mut bounds = vec2(screen_width(), screen_height());
-    let mut flock = Flock::new(1000, bounds);
+    let mut flock = Flock::new(10000, bounds);
+
+    // How many boids to add/remove per frame while a key is held.
+    let step = 50;
 
     loop {
         bounds = vec2(screen_width(), screen_height());
+
+        // Hold Up to spawn more boids, Down to remove them.
+        if is_key_down(KeyCode::Up) {
+            flock.add(step, bounds);
+        }
+        if is_key_down(KeyCode::Down) {
+            flock.remove(step);
+        }
+
         flock.update(get_frame_time(), bounds);
 
         clear_background(Color::from_rgba(12, 14, 22, 255));
@@ -29,7 +42,8 @@ async fn main() {
             boid.draw();
         }
 
-        draw_text(&format!("{} boids", flock.boids.len()), 12.0, 24.0, 22.0, GRAY);
+        let info = format!("{} fps   {} boids   [Up/Down to add/remove]", get_fps(), flock.boids.len());
+        draw_text(&info, 12.0, 24.0, 22.0, GRAY);
         next_frame().await;
     }
 }
